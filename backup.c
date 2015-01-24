@@ -101,14 +101,15 @@ int main(int argc, char **argv)
 	fpe = dofreopen(errlog, "a", stderr);
 
 
-	// Do we have both the excludes file and config file in place?
+	// Is this the first run of backup?
 	if (filexists(cfgfile, &fsize) == -1 ||
-			filexists(exclfile, &fsize) == -1) {
+		filexists(exclfile, &fsize) == -1 ||
+		filexists(exclfile, &fsize) == -1 ) {
 		// the first run text
 		sprintf(wrkdir, frfmt, "excludes", "backup.cfg", cfgdir);
 		char *txt = dostrdup(wrkdir);
 		firstrun(txt, "/usr/local/share/", cfgdir, "backup.cfg",
-					"excludes", NULL);
+					"excludes", "cruft", NULL);
 		free(txt);
 		fputs("\nPlease edit these files and run backup again.\n",
 				stdout);
