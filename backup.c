@@ -126,6 +126,7 @@ int main(int argc, char **argv)
 	}
 	conf = readfile(cfgfile, 0, 1);	// config stuff.
 	getconfig(conf.from, conf.to, bdev, dirname);
+	free(conf.from);
 
 	// now see what is going on in mtab
 	mtab = readfile("/etc/mtab", 0, 1);
@@ -136,6 +137,7 @@ int main(int argc, char **argv)
 	}
 	if (wrkdir[strlen(wrkdir) -1 ] != '/') strcat(wrkdir, "/");
 	char *bupath = strdup(wrkdir);
+	free(mtab.from);
 
 	// Where am I?
 	if (!getcwd(wrkdir, PATH_MAX)) {
@@ -271,6 +273,7 @@ int main(int argc, char **argv)
 
 	// clear the lock
 	dounlink(lockfile);
+	free(logs.from);
 
 finis:
 	fclose(fpe);	// the error log.
