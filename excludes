@@ -1,0 +1,13 @@
+# excludes
+# pattern followed by 0 of more options for grep all space separated;
+# a real space, do not use tabs etc.
+# If the pattern needs to be protected in any way do it here.
+~swp$
+~bak$
+.workrave/*
+cruft
+log/*
+lock/*
+# had a change of mind about excluding the cached stuff after doing a
+# restore. Just put up with a lot of noise in backup.log and cruft.
+

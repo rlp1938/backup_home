@@ -1,0 +1,13 @@
+#cruft - a list of regexes for decruft to use.
+[.]config/chromium*
+[.]cache/chromium*	# a comment preceded by <tab>
+[.]cache/firefox*
+[.]mozilla/firefox*
+# comments begin with '#'
+[.]cache/upstart*
+[.]local/share* # a comment preceded by <space>
+[.]cache/xfce4*
+[.]config/xfce4*
+[.]psensor*
+[.]config/dconf*
+[.]cache/mozilla*
