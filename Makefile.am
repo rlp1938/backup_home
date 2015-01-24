@@ -12,7 +12,7 @@ decruft_SOURCES=decruft.c fileutil.c fileutil.h backutils.c backutils.h runutils
 bulogrot_SOURCES=bulogrot.c fileutil.c fileutil.h backutils.c backutils.h runutils.c runutils.h
 
 
-man_MANS=backup.1 cleanup.1
+man_MANS=backup.1 cleanup.1 bulogrot.1 decruft.1
 bacdir=$(datadir)/backup
 bac_DATA=backup.cfg excludes cruft
-EXTRA_BUILD=backup.1 cleanup.1 backup.cfg excludes cruft
+EXTRA_BUILD=backup.1 cleanup.1 bulogrot.1 decruft.1 backup.cfg excludes cruft
