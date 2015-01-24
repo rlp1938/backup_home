@@ -113,6 +113,19 @@ int main(int argc, char **argv)
 		free(txt);
 		fputs("\nPlease edit these files and run backup again.\n",
 				stdout);
+		// do the log and lock dirs exist in $HOME? If not make 'em.
+		if (direxists(logdir) == -1) {
+			// make it then.
+			sprintf(command, "mkdir %s", logdir);
+			dosystem(command);
+		}
+		if (direxists(lockdir) == -1) {
+			// make it then.
+			sprintf(command, "mkdir %s", lockdir);
+			dosystem(command);
+		}
+
+
 		exit(EXIT_SUCCESS);
 	}
 
@@ -151,18 +164,6 @@ int main(int argc, char **argv)
 			perror(home);
 			exit(EXIT_FAILURE);
 		}
-	}
-
-	// do the log and lock dirs exist in $HOME? If not make 'em.
-	if (direxists(logdir) == -1) {
-		// make it then.
-		sprintf(command, "mkdir %s", logdir);
-		dosystem(command);
-	}
-	if (direxists(lockdir) == -1) {
-		// make it then.
-		sprintf(command, "mkdir %s", lockdir);
-		dosystem(command);
 	}
 
 	// Is an earlier instance of backup running?
