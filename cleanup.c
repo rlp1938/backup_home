@@ -122,18 +122,6 @@ int main(int argc, char **argv)
 		}
 	}
 
-	// do the log and lock dirs exist in $HOME? If not make 'em.
-	if (direxists(logdir) == -1) {
-		// make it then.
-		sprintf(command, "mkdir %s", logdir);
-		dosystem(command);
-	}
-	if (direxists(lockdir) == -1) {
-		// make it then.
-		sprintf(command, "mkdir %s", lockdir);
-		dosystem(command);
-	}
-
 	// Is an earlier instance of backup running?
 	if (filexists(lockfile, &fsize) == 0) {
 		// rsync may have crashed us out on an earlier run.
