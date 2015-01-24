@@ -134,5 +134,6 @@ void stripcomments(char *pathfrom, char *pathto)
 		}
 		cp += strlen(cp) + 1;
 	} // while()
+	free(fdat.from);
 	fclose(fpo);
 } // stripcomments()
