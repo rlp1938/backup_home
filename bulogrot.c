@@ -59,9 +59,10 @@ int main()
 	sprintf(pathname, "%s/log/errors.log", home);
 	errlog = dostrdup(pathname);
 
-	while(filexists(lockfile, &dummy) == 0 || checkps() == 0) {
-		sleep(60); // pause 1 minute and try again.
-	} // while()
+	while(filexists(lockfile, &dummy) == 0) {
+		if (checkps() == -1) break;
+		sleep(60);
+	}
 
 	// Ok past the locked state so put my own lock on.
 	fpo = dofopen(lockfile, "w");
