@@ -36,8 +36,8 @@
 
 // Globals
 static char *frfmt =
-"This the first run of backup. Backup needs to copy two files, "
-"%s and %s from "
+"This the first run of backup. Backup needs to copy three files, "
+"%s, %s and %s from "
 "/usr/local/share. The copies will be installed in %s. You should edit "
 "these files to ensure they meet your needs. In the configuration file "
 "you name the device on which the backup directory resides and also "
@@ -93,22 +93,21 @@ int main(int argc, char **argv)
 	char *bulog = dostrdup(wrkdir);	// safety copy of the log.
 	sprintf(wrkdir, "%slog/errors.log", home);
 	char *errlog = dostrdup(wrkdir);	// log errors.
+	sprintf(wrkdir, "%s.config/backup/cruft", home);
+	char *cruftregex = dostrdup(wrkdir);	// describe cruft by regex.
 
 	dogetenv("LOGNAME", user);
-
-	// redirect stdout, stderr
-	fpo = dofreopen(logfile, "a", stdout);
-	fpe = dofreopen(errlog, "a", stderr);
 
 
 	// Is this the first run of backup?
 	if (filexists(cfgfile, &fsize) == -1 ||
 		filexists(exclfile, &fsize) == -1 ||
-		filexists(exclfile, &fsize) == -1 ) {
+		filexists(cruftregex, &fsize) == -1 ) {
 		// the first run text
-		sprintf(wrkdir, frfmt, "excludes", "backup.cfg", cfgdir);
+		sprintf(wrkdir, frfmt, "excludes", "backup.cfg", "cruft",
+					cfgdir);
 		char *txt = dostrdup(wrkdir);
-		firstrun(txt, "/usr/local/share/", cfgdir, "backup.cfg",
+		firstrun(txt, "/usr/local/share/backup/", cfgdir, "backup.cfg",
 					"excludes", "cruft", NULL);
 		free(txt);
 		fputs("\nPlease edit these files and run backup again.\n",
@@ -124,10 +123,12 @@ int main(int argc, char **argv)
 			sprintf(command, "mkdir %s", lockdir);
 			dosystem(command);
 		}
-
-
-		exit(EXIT_SUCCESS);
+		goto finis;
 	}
+
+	// redirect stdout, stderr
+	fpo = dofreopen(logfile, "a", stdout);
+	fpe = dofreopen(errlog, "a", stderr);
 
 	// nice() this thing, I don't want the slightest delay from it.
 	errno = 0;
@@ -276,11 +277,12 @@ int main(int argc, char **argv)
 	// clear the lock
 	dounlink(lockfile);
 	free(logs.from);
+	fclose(fpe);	// the error log.
+	free(bupath);
 
 finis:
-	fclose(fpe);	// the error log.
 	// free my heap strings
-	free(bupath);
+	free(cruftregex);
 	free(errlog);
 	free(bulog);
 	free(tracefile);

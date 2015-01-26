@@ -30,7 +30,7 @@ void firstrun(char *frtext, char *srcdir, char *dstdir, ...)
 	char from[PATH_MAX], to [PATH_MAX];
 	char *cp;
 	FILE *fpo;
-	int dispcols = 72;
+	int dispcols = 70;
 
 	display(frtext, dispcols);
 
