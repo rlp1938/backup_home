@@ -4,7 +4,7 @@
 AC_PREREQ([2.69])
 AC_INIT([backup], [1.0.0], [rlp1938@gmail.com])
 AM_INIT_AUTOMAKE
-AC_CONFIG_SRCDIR([backup])
+AC_CONFIG_SRCDIR([backup.c])
 AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
