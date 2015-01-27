@@ -37,8 +37,6 @@
 
 char progname[NAME_MAX];
 
-void *memmem(const void *haystack, size_t haystacklen,
-                    const void *needle, size_t needlelen);
 char *dostrdup(const char *s);
 void firstrun(char *frtext, char *srcdir, char *dstdir, ...);
 void dogetenv(const char *param, char *result);
