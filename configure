@@ -585,7 +585,7 @@ PACKAGE_STRING='backup 1.0.0'
 PACKAGE_BUGREPORT='rlp1938@gmail.com'
 PACKAGE_URL=''
 
-ac_unique_file="backup"
+ac_unique_file="backup.c"
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stdio.h>
