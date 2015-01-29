@@ -33,6 +33,7 @@
 #include "fileutil.h"
 #include "runutils.h"
 #include "backutils.h"
+#include "config.h"
 
 // Globals
 static char *frfmt =
