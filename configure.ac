@@ -23,7 +23,7 @@ AC_TYPE_SIZE_T
 
 # Checks for library functions.
 AC_FUNC_MALLOC
-AC_CHECK_FUNCS([getcwd memchr memset regcomp setenv strchr strdup])
+AC_CHECK_FUNCS([getcwd memchr memmem memset regcomp setenv strchr strdup])
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

@@ -3,6 +3,7 @@
 /autoscan.log
 /compile
 /config.*
+/configure
 /configure.scan
 /depcomp
 /.deps/
