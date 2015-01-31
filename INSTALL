@@ -1,3 +1,8 @@
+Specific Instructions for backup
+********************************
+The bundle includes a prebuilt configure. Alternatively those who have
+autotools may prefer to generate their own configure with 'autoconf -i'.
+
 Installation Instructions
 *************************
 

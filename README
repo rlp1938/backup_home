@@ -39,3 +39,4 @@ togther by using a lockfile. However rsync can and does crash regularly
 due to deletions of cache files during the progress of the copy. The
 backup programs do recover from this situation by examining the ps
 table. A suitable message is written to errors.log in that case.
+ See also INSTALL.
