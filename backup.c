@@ -228,7 +228,7 @@ int main(int argc, char **argv)
 	/* This second version uses the --del option but also uses
 	 * --dry-run and directs the output to $HOME/log/dryrun.log for
 	 * manual review of what would have been deleted. Unfortunately
-	 * this file is overloaded with browser crap. Run decrap to strip
+	 * this file is overloaded with browser crap. Run decruft to strip
 	 * that out and then manually review what is left before running
 	 * cleanup.
 	 * */
