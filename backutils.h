@@ -15,6 +15,7 @@
 #include <time.h>
 
 #include "runutils.h"
+#include "greputils.h"
 
 void getconfig(const char *from, const char *to, char *thedev,
 						char *mountpoint);

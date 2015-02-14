@@ -36,16 +36,16 @@
 #include <regex.h>
 #include <sys/types.h>
 
-char *myname;		/* for error messages */
-int ignore_case;	/* -i option: ignore case */
-int extended;		/* -E option: use extended RE's */
-int errors;			/* number of errors */
-int invert;			/* find lines that don't match */
+static char *myname;		/* for error messages */
+static int ignore_case;		/* -i option: ignore case */
+static int extended;		/* -E option: use extended RE's */
+static int errors;			/* number of errors */
+static int invert;			/* find lines that don't match */
 
-regex_t pattern;	/* pattern to match */
+static regex_t pattern;		/* pattern to match */
 
-void compile_pattern(const char *pat);
-void process(const char *name, FILE *fp, FILE *fpo);
+static void compile_pattern(const char *pat);
+static void process(const char *name, FILE *fp, FILE *fpo);
 void dogrep(const char *file2write, const char *file2grep,
 			const char *regex, ...);
 
