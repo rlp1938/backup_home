@@ -37,7 +37,6 @@
 #include "greputils.h"
 
 static void usage(void);
-static void stripcomments(char *pathfrom, char *pathto);
 
 int main(int argc, char **argv)
 {
@@ -110,30 +109,3 @@ void usage(void)
 
 } //usage()
 
-/* Consider putting this in fileutil after experience with it. */
-void stripcomments(char *pathfrom, char *pathto)
-{
-	FILE *fpo;
-	struct fdata fdat;
-	char line[NAME_MAX];
-	int lc;
-
-	fdat = readfile(pathfrom, 0, 1);
-	mem2str(fdat.from, fdat.to, &lc);
-
-	fpo = dofopen(pathto, "w");
-	char *cp = fdat.from;
-	while (cp < fdat.to) {
-		if (cp[0] != '#') {
-			char *cmt;
-			strcpy(line, cp);
-			cmt = strchr(line, '#');
-			if (cmt) *cmt = '\0';
-			stripws(line);
-			fprintf(fpo, "%s\n", line);
-		}
-		cp += strlen(cp) + 1;
-	} // while()
-	free(fdat.from);
-	fclose(fpo);
-} // stripcomments()

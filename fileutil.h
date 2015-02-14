@@ -27,4 +27,5 @@ void writefile(const char *fname, char *fro, const char *to);
 void dounlink(const char *fname);
 void mem2str(char *fr, char *to, int *lcount);
 void cpfile(const char *fr, const char *to);
+void stripcomments(char *pathfrom, char *pathto);
 #endif /* fileutil.h */

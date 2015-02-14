@@ -19,7 +19,7 @@
 */
 
 #include "fileutil.h"
-
+#include "runutils.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -195,3 +195,30 @@ void cpfile(const char *fr, const char *to)
 	writefile(to, frdat.from, frdat.to);
 	free(frdat.from);
 }
+
+void stripcomments(char *pathfrom, char *pathto)
+{
+	FILE *fpo;
+	struct fdata fdat;
+	char line[NAME_MAX];
+	int lc;
+
+	fdat = readfile(pathfrom, 0, 1);
+	mem2str(fdat.from, fdat.to, &lc);
+
+	fpo = dofopen(pathto, "w");
+	char *cp = fdat.from;
+	while (cp < fdat.to) {
+		if (cp[0] != '#') {
+			char *cmt;
+			strcpy(line, cp);
+			cmt = strchr(line, '#');
+			if (cmt) *cmt = '\0';
+			stripws(line);
+			fprintf(fpo, "%s\n", line);
+		}
+		cp += strlen(cp) + 1;
+	} // while()
+	free(fdat.from);
+	fclose(fpo);
+} // stripcomments()
