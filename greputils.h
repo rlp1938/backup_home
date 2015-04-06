@@ -37,12 +37,12 @@
 #include <sys/types.h>
 
 char *myname;		/* for error messages */
-int ignore_case;		/* -i option: ignore case */
+int ignore_case;	/* -i option: ignore case */
 int extended;		/* -E option: use extended RE's */
 int errors;			/* number of errors */
 int invert;			/* find lines that don't match */
 
-regex_t pattern;		/* pattern to match */
+regex_t pattern;	/* pattern to match */
 
 void compile_pattern(const char *pat);
 void process(const char *name, FILE *fp, FILE *fpo);

@@ -11,3 +11,5 @@
 [.]psensor*
 [.]config/dconf*
 [.]cache/mozilla*
+[.]dropbox-dist
+[.]dropbox

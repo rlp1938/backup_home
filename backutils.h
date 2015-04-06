@@ -17,9 +17,12 @@
 #include "runutils.h"
 #include "greputils.h"
 
-void getconfig(const char *from, const char *to, char *thedev,
-						char *mountpoint);
-int getbupath(char *from, char *to, char *dev, char *budir,
+void *memmem(const void *haystack, size_t haystacklen,
+                    const void *needle, size_t needlelen);
+
+void getconfig(const char *from, const char *to, char *theregex,
+						char *thedir);
+int getbupath(char *mtabfile, char *bregex, char *budir,
 						char *bupath);
 char *recursedir(char *topdir, char *searchfor);
 void logthis(const char *who, const char *msg, FILE *fplog);

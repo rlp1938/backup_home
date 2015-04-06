@@ -20,23 +20,24 @@
 
 #include "backutils.h"
 #include "fileutil.h"
+#include "greputils.h"
 
 
-void getconfig(const char *from, const char *to, char *device,
-						char *dirname)
+void getconfig(const char *from, const char *to, char *regex,
+						char *budirdir)
 {	// from, to data in. device, dirname data out.
-	char *thedev="dev=";
+	char *theregex="regex=";
 	char *thedir="backupdir=";
 	char *cpf, *cpt, *cp;
 
 	// the device
-	cp = memmem(from, to - from, thedev, strlen(thedev));
+	cp = memmem(from, to - from, theregex, strlen(theregex));
 	if(!cp) {
 		fprintf(stderr, "%s\n", "Corrupted config file.");
 		fwrite(from, 1, to-from, stderr);
 		exit(EXIT_FAILURE);
 	}
-	cpf = cp + strlen(thedev);
+	cpf = cp + strlen(theregex);
 	cpt = memchr(cpf, '\n', to - cpf);
 	if (!cpt) {
 		fprintf(stderr, "%s\n", "Corrupted config file.");
@@ -44,7 +45,7 @@ void getconfig(const char *from, const char *to, char *device,
 		exit(EXIT_FAILURE);
 	}
 	*cpt = '\0';
-	strcpy(device, cpf);
+	strcpy(regex, cpf);
 
 	// the backup dir to search for.
 	cp = memmem(from, to - from, thedir, strlen(thedir));
@@ -61,38 +62,54 @@ void getconfig(const char *from, const char *to, char *device,
 		exit(EXIT_FAILURE);
 	}
 	*cpt = '\0';
-	strcpy(dirname, cpf);
+	strcpy(budirdir, cpf);
 } // getconfig()
 
-int getbupath(char *from, char *to, char *dev, char *budir,
+int getbupath(char *mtabfile, char *bregex, char *budir,
 			char *bupath)
 {	// return -1 if not, 0 otherwise.
+	// I want a workfile in /tmp
+	struct stat sb;
+	char outfil[NAME_MAX];
+	char myregex[120];
+	sprintf(outfil, "/tmp/grepresult%i",getpid());
+	// build the real regex
+	strcpy(myregex, bregex);
+	if (myregex[strlen(myregex) - 1] != '/') strcat(myregex, "/");
+	// myregex should look something like "/media/"
+	dogrep(outfil, mtabfile, myregex, "-E", NULL);
+	sync();
+	if (stat(outfil, &sb) == -1) goto finis;	// Should be impossible
+	if (sb.st_size == 0) goto finis;	// grep came up empty
+	// The file will have 1 or more lines.
 	char *cp;
+	filedata fdat = readfile(outfil, 0, 1);
+	unlink(outfil);
 
-	cp = from;
-	while((cp = memmem(cp, to - cp, dev, strlen(dev)))) {
-		/* immaterial if the dev is dev1, dev2 etc, all that
-		   matters is the mountpoint, and if the backup dir
-		   is to be found within it.
-		*/
-		char fline[NAME_MAX];
-		char *retpath, *cpf, *cpt;
+	// turn the file data into a list of C strings
+	cp = fdat.from;
+	while (cp < fdat.to) {
+		if (*cp == '\n') *cp = '\0';
+		cp++;
+	}
 
-		strncpy(fline, cp, to - cp);
-		fline[to - cp] = '\0';
-		// now operate on fline
-		cpf = strchr(fline, ' ');	// first space, mountpoint after.
-		cpf++;	// now at mountpoint
-		cpt = strchr(cpf, ' ');
-		*cpt = '\0';
-		retpath = recursedir(cpf, budir);
-		if(retpath) {
-			strcpy(bupath, retpath);
+	// loop over the file data and extract dir search path
+	cp = fdat.from;
+	while (cp < fdat.to) {
+		char *line = strstr(cp, myregex);	// get past /dev...
+		char *end = strchr(line, ' ');		// end of the dir part
+		*end = '\0';
+		char *bup = recursedir(line, budir);
+		if (bup) {
+			strcpy(bupath, bup);
 			return 0;
 		}
-		// there may more than 1 dev in the file.
-		cp += strlen(fline);
-	} // while(cp...)
+		// next line
+		cp += strlen(line) + 1;
+	}
+	return -1;	// never found the backup path
+finis:
+	unlink(outfil);
 	return -1;
 } // getbupath()
 
@@ -141,62 +158,3 @@ void logthis(const char *who, const char *msg, FILE *fplog)
 	tm = time(0);
 	fprintf(fplog, "%s%s: %s\n", ctime(&tm), who, msg);
 } // logthis()
-
-int checkps(void)
-{	// get a list of ps and search for 'backup' and 'rsync' within it.
-	char command[NAME_MAX], fn[NAME_MAX];
-	struct fdata dat;
-	FILE *fpo;
-	char *cp;
-	pid_t mypid = getpid();
-
-	sprintf(fn, "%s%d", progname, mypid);
-
-	fpo = dofreopen(fn, "w", stdout);
-	sprintf(command, "ps -ef");
-	dosystem(command);
-	fclose(fpo);
-	dat = readfile(fn, 0, 1);
-	dounlink(fn);
-
-	// Who am I? Right now I don't care, just see if I exist more than
-	// once.
-	cp = memmem(dat.from, dat.to - dat.from, progname,
-					strlen(progname));
-	if (cp) {
-		cp += strlen(progname);
-		cp = memmem(cp, dat.to - cp, progname, strlen(progname));
-			if (cp) goto found;
-	}
-
-	// Who am I? It matters now.
-	if (strcmp(progname, "bulogrot") == 0) {
-	cp = memmem(dat.from, dat.to - dat.from, "cleanup",
-					strlen("cleanup"));
-		if (cp) goto found;
-		cp = memmem(dat.from, dat.to - dat.from, "backup",
-					strlen("backup"));
-		if (cp) goto found;
-	} else if (strcmp(progname, "backup") == 0) {
-		cp = memmem(dat.from, dat.to - dat.from, "cleanup",
-					strlen("cleanup"));
-		if (cp) goto found;
-		cp = memmem(dat.from, dat.to - dat.from, "bulogrot",
-					strlen("bulogrot"));
-		if (cp) goto found;
-	} else { // it's  cleanup
-		cp = memmem(dat.from, dat.to - dat.from, "backup",
-					strlen("backup"));
-		if (cp) goto found;
-		cp = memmem(dat.from, dat.to - dat.from, "bulogrot",
-					strlen("bulogrot"));
-		if (cp) goto found;
-	}
-
-	free(dat.from);
-	return -1;
-
-found:
-	free(dat.from);
-	return 0;
-} // checkps()

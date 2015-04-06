@@ -130,27 +130,18 @@ void writefile(const char *fname, char *fro, const char *to)
 
 	siz = to - fro;
 	if (strcmp(fname, "-") == 0) {
-		/* I have had some impossibility writing to stdout after
-		 * redirecting it using freopen(). I worked around that by
-		 * explicitly opening a named file to take some output.
-		 * I should just use fwrite() on this also.
-		*/
-		char *cp = fro;
-		while (cp < to) {
-			putchar(*cp);
-			cp++;
-		}
+		fpo = stdout;
 	} else {
 		fpo = dofopen(fname, "w");
-		result = fwrite(fro, 1, siz, fpo);
-		if (result != siz) {
-			fprintf(stderr, "Size discrepancy in fwrite: %s %zu, %zu",
-				fname, siz, result);
+	}
+	result = fwrite(fro, 1, siz, fpo);
+	if (result != siz) {
+		fprintf(stderr, "Size discrepancy in fwrite: %s %zu, %zu",
+			fname, siz, result);
 			perror(fname);	// might produce something useful.
 			exit(EXIT_FAILURE);
-		}
-	fclose(fpo);
 	}
+	fclose(fpo);
 } // writefile()
 
 

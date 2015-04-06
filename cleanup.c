@@ -33,6 +33,7 @@
 #include "fileutil.h"
 #include "runutils.h"
 #include "backutils.h"
+#include "checkps.h"
 
 // Globals
 
@@ -98,7 +99,7 @@ int main(int argc, char **argv)
 
 	// now see what is going on in mtab
 	mtab = readfile("/etc/mtab", 0, 1);
-	if (getbupath(mtab.from, mtab.to, bdev, dirname, wrkdir) == -1) {
+	if (getbupath("/etc/mtab", bdev, dirname, wrkdir) == -1) {
 		sprintf(command, "/bin/date");
 		dosystem(command);
 		fprintf(stderr, "Backup drive is not mounted, quitting.\n");

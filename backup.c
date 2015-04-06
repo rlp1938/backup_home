@@ -34,6 +34,8 @@
 #include "runutils.h"
 #include "backutils.h"
 #include "greputils.h"
+#include "checkps.h"
+
 
 // Globals
 static char *frfmt =
@@ -54,7 +56,7 @@ static char *frfmt =
 int main(int argc, char **argv)
 {
 	char home[NAME_MAX], user[NAME_MAX];
-	struct fdata conf, mtab, logs;
+	struct fdata conf, logs;
 	char dirname[NAME_MAX], bdev[32], wrkdir[PATH_MAX],
 				command[NAME_MAX];
 	off_t fsize;
@@ -144,16 +146,14 @@ int main(int argc, char **argv)
 	getconfig(conf.from, conf.to, bdev, dirname);
 	free(conf.from);
 
-	// now see what is going on in mtab
-	mtab = readfile("/etc/mtab", 0, 1);
-	if (getbupath(mtab.from, mtab.to, bdev, dirname, wrkdir) == -1) {
+	if (getbupath("/etc/mtab", bdev, dirname, wrkdir) == -1) {
 		logthis(progname, "Backup drive is not mounted. Will quit.\n",
 				fpe);
 		exit(EXIT_FAILURE);
 	}
+
 	if (wrkdir[strlen(wrkdir) -1 ] != '/') strcat(wrkdir, "/");
 	char *bupath = strdup(wrkdir);
-	free(mtab.from);
 
 	// Where am I?
 	if (!getcwd(wrkdir, PATH_MAX)) {
