@@ -86,26 +86,23 @@ int getbupath(char *mtabfile, char *bregex, char *budir,
 	filedata fdat = readfile(outfil, 0, 1);
 	unlink(outfil);
 
-	// turn the file data into a list of C strings
-	cp = fdat.from;
-	while (cp < fdat.to) {
-		if (*cp == '\n') *cp = '\0';
-		cp++;
-	}
-
 	// loop over the file data and extract dir search path
 	cp = fdat.from;
 	while (cp < fdat.to) {
-		char *line = strstr(cp, myregex);	// get past /dev...
-		char *end = strchr(line, ' ');		// end of the dir part
+		char buf[PATH_MAX];
+		char *mtdir = strstr(cp, myregex);	// get past /dev...
+		char *end = strchr(mtdir, ' ');		// end of the dir part
 		*end = '\0';
-		char *bup = recursedir(line, budir);
+		strcpy(buf, mtdir);
+		*end = ' ';	// restore input data
+		char *bup = recursedir(buf, budir);
 		if (bup) {
 			strcpy(bupath, bup);
 			return 0;
 		}
 		// next line
-		cp += strlen(line) + 1;
+		end = strchr(cp, '\n');
+		cp = end + 1;
 	}
 	return -1;	// never found the backup path
 finis:

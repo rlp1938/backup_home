@@ -53,6 +53,20 @@ static char *frfmt =
 "to copy the above named files into your config directory by hand."
 ;
 
+char *helpmsg = "\n\tUsage: backup [option]\n"
+  "\n\tOptions:\n"
+  "\t-h outputs this help message and exits.\n"
+  "\t-b program_or_script. Runs the named program before the actual\n"
+  "\t   backup starts. The option may be repeated for as many programs\n"
+  "\t   are required to run. There is no limit other than available\n"
+  "\t   memory. \n"
+  "\t-a program_or_script. Runs the named program after the backup\n"
+  "\t   completes. The option may be repeated as above.\n"
+  ;
+
+void dohelp(int forced);
+
+
 int main(int argc, char **argv)
 {
 	char home[NAME_MAX], user[NAME_MAX];
@@ -61,6 +75,56 @@ int main(int argc, char **argv)
 				command[NAME_MAX];
 	off_t fsize;
 	FILE *fpo, *fpe;
+	int opt;
+
+	char **runbefore = malloc(10 * sizeof(char *));
+	int beforeruns = 0;
+	int beforemax = 10;
+	char **runafter = malloc(10 * sizeof(char *));
+	int afterruns = 0;
+	int aftermax = 10;
+	memset(runbefore, 0, beforemax * sizeof(char *));
+	memset(runafter, 0, aftermax * sizeof(char *));
+
+	while((opt = getopt(argc, argv, ":hb:a:")) != -1) {
+		switch(opt){
+		case 'h':
+			dohelp(0);
+		break;
+		case 'b': // run before
+		if (beforeruns > beforemax - 1) {
+			// always leave a terminating NULL at the end of the list.
+			runbefore = realloc(runbefore, (beforemax + 10) *
+								sizeof(char *));
+			// beforemax is the offset into new runbefore to be zeroed.
+			memset(runbefore + beforemax, 0, 10 * sizeof(char *));
+			beforemax += 10;
+		}
+		runbefore[beforeruns] = dostrdup(optarg);
+		beforeruns++;
+		break;
+		case 'a': // run after
+		if (afterruns > aftermax - 1) {
+			// always leave a terminating NULL at the end of the list.
+			runafter = realloc(runafter, (aftermax + 10) *
+								sizeof(char *));
+			// aftermax is the offset into new runafter to be zeroed.
+			memset(runafter + aftermax, 0, 10 * sizeof(char *));
+			aftermax += 10;
+		}
+		runafter[afterruns] = dostrdup(optarg);
+		afterruns++;
+		break;
+		case ':':
+			fprintf(stderr, "Option %c requires an argument\n",optopt);
+			dohelp(1);
+		break;
+		case '?':
+			fprintf(stderr, "Illegal option: %c\n",optopt);
+			dohelp(1);
+		break;
+		} //switch()
+	}//while()
 
 	strcpy(progname, basename(argv[0]));
 	/* The POS below successfully stops gcc bitching but then gives
@@ -188,6 +252,16 @@ int main(int argc, char **argv)
 		fclose(fpl);
 	}
 	sync();
+
+	// process the run before programs/scripts
+	int i = 0;
+	while(runbefore[i]) {
+		char buf[PATH_MAX];
+		(void)realpath(runbefore[i], buf);
+		dosystem(buf);
+		i++;
+	}
+
 	// record beginning date
 	logthis(progname, "Begin backup.", stdout);
 	fclose(fpo);	// Force the writes in correct order
@@ -275,6 +349,15 @@ int main(int argc, char **argv)
 		dounlink(bulog);	// done with it.
 	}
 
+	// process the run after programs/scripts
+	i = 0;
+	while(runafter[i]) {
+		char buf[PATH_MAX];
+		(void)realpath(runafter[i], buf);
+		dosystem(buf);
+		i++;
+	}
+
 	// clear the lock
 	dounlink(lockfile);
 	free(logs.from);
@@ -298,3 +381,9 @@ finis:
 
 	return 0;
 } // main()
+
+void dohelp(int forced)
+{
+  fputs(helpmsg, stderr);
+  exit(forced);
+}

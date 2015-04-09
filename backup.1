@@ -24,11 +24,28 @@ an available MTA or not. But see \fBFIRSTRUN\fR below for an exception.
 
 .P
 NB this program is intended to be run by \fBcron\fR at frequent intervals.
-Accordingly \fBrsync\fR is run without using the \fB\-\-del\fR option. But it
-is run a second time using both
-\fB--del\fR and \fB--dry-run\fR
-options and logged separately to the main log. See \fBFILES\fR below for
-more detail.
+Accordingly \fBrsync\fR is run without using the \fB\-\-del\fR option.
+But it is run a second time using both
+\fB--del\fR and \fB--dry-run\fR options and logged separately to the
+main log. See \fBFILES\fR below for more detail.
+
+.SH OPTIONS
+
+.TP
+ \fB\-h\fR
+print help information and exit.
+
+.TP
+ \fB\-b\fR
+\fIprogram_or_script\fR to run before the actual backup takes place.
+Repeat this option for as many programs or scripts that you want to run
+before the backup happens. There is no limit, other than available
+memory, on the number of programs to run.
+.TP
+ \fB\-a\fR
+\fIprogram_or_script\fR to run after the actual backup finishes.
+You may repeat this option as often as needed as above.
+
 
 .SH FIRSTRUN
 
