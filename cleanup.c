@@ -146,6 +146,7 @@ int main(int argc, char **argv)
 
 	// record beginning date
 	logthis(progname, "Begin backup.", stdout);
+	logthis("Backup destination:", bupath, stdout);
 	fclose(fpo);	// Force the writes in correct order
 	fpo = dofreopen(logfile, "a", stdout);
 	sync();
