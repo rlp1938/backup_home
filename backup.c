@@ -253,7 +253,7 @@ int main(int argc, char **argv)
 	}
 	sync();
 
-	// process the run before programs/scripts
+	// processes to run before the actual backup.
 	int i = 0;
 	while(runbefore[i]) {
 		char buf[PATH_MAX];
@@ -290,7 +290,7 @@ int main(int argc, char **argv)
 	fpo = dofreopen(logfile, "a", stdout);
 	sync();
 
-	// want to split the dry run stuff out of backup.log to record it
+	// I want to split the dry run stuff out of backup.log to record it
 	// separately. So put xml markers around that stuff.
 	fprintf(stdout, "%s\n", "<dryrun>");
 	logthis(progname, "Begin dry run.", stdout);
