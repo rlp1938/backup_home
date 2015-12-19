@@ -1,6 +1,6 @@
 /*
- * runutils.h
- * 	Copyright 23.12.2014 Bob Parker <rlp1938@gmail.com>
+ * firstrun.h
+ * 	Copyright 2015 Bob Parker rlp1938@gmail.com
  *
  *	This program is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -18,36 +18,19 @@
  *	MA 02110-1301, USA.
 */
 
-#ifndef _RUNUTILS_H
-#define _RUNUTILS_H
-
-#include <stdio.h>
+#ifndef _FIRSTRUN_H
+#define _FIRSTRUN_H
 #include <stdlib.h>
 #include <stdarg.h>
-#include <unistd.h>
-#include <getopt.h>
-#include <sys/stat.h>
-#include <string.h>
-#include <dirent.h>
-#include <ctype.h>
 #include <limits.h>
-#include <libgen.h>
+#include <linux/limits.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include "fileops.h"
 
-#include "fileutil.h"
-
-char progname[NAME_MAX];
-
-char *dostrdup(const char *s);
-void firstrun(char *frtext, char *srcdir, char *dstdir, ...);
-void dogetenv(const char *param, char *result);
-void reporterror(const char *module, const char *perrorstr,
-							int fatal);
-void dosetlang(void);
-void display(char *disptext, unsigned int cols);
+int checkfirstrun(char *progname);
+void firstrun(char *progname, ...);
 void dosystem(const char *cmd);
-void trace(char *tracefilename, char *tracetext);
-void stripws(char *target);
-
-struct fdata rufd;
 
 #endif

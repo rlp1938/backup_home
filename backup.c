@@ -1,6 +1,6 @@
 /*      backup.c
  *
- *	Copyright 2014/12/23 Bob Parker <rlp1938@gmail.com>
+ *	Copyright 2015 Bob Parker rlp1938@gmail.com
  *
  *	This program is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -29,29 +29,13 @@
 #include <limits.h>
 #include <libgen.h>
 #include <errno.h>
-
-#include "fileutil.h"
-#include "runutils.h"
+#include "fileops.h"
+#include "firstrun.h"
 #include "backutils.h"
-#include "greputils.h"
-#include "checkps.h"
+
 
 
 // Globals
-static char *frfmt =
-"This the first run of backup. Backup needs to copy three files, "
-"%s, %s and %s from "
-"/usr/local/share. The copies will be installed in %s. You should edit "
-"these files to ensure they meet your needs. In the configuration file "
-"you name the device on which the backup directory resides and also "
-"name the actual backup directory. There is no need to name the device "
-"number. Backup will find the named backup dir if indeed a backup "
-"device is mounted. The minimum content of the exclusions file is "
-"the set of files that are altered by the backup program itself. You "
-"can add to that anything you don't want to backup. If you used a "
-"prefix other than /usr/local when you built the program you will need "
-"to copy the above named files into your config directory by hand."
-;
 
 char *helpmsg = "\n\tUsage: backup [option]\n"
   "\n\tOptions:\n"
@@ -65,7 +49,7 @@ char *helpmsg = "\n\tUsage: backup [option]\n"
   ;
 
 void dohelp(int forced);
-
+char progname[NAME_MAX];
 
 int main(int argc, char **argv)
 {
@@ -73,7 +57,6 @@ int main(int argc, char **argv)
 	struct fdata conf, logs;
 	char dirname[NAME_MAX], bdev[32], wrkdir[PATH_MAX],
 				command[NAME_MAX];
-	off_t fsize;
 	FILE *fpo, *fpe;
 	int opt;
 
@@ -100,7 +83,7 @@ int main(int argc, char **argv)
 			memset(runbefore + beforemax, 0, 10 * sizeof(char *));
 			beforemax += 10;
 		}
-		runbefore[beforeruns] = dostrdup(optarg);
+		runbefore[beforeruns] = strdup(optarg);
 		beforeruns++;
 		break;
 		case 'a': // run after
@@ -112,7 +95,7 @@ int main(int argc, char **argv)
 			memset(runafter + aftermax, 0, 10 * sizeof(char *));
 			aftermax += 10;
 		}
-		runafter[afterruns] = dostrdup(optarg);
+		runafter[afterruns] = strdup(optarg);
 		afterruns++;
 		break;
 		case ':':
@@ -133,63 +116,49 @@ int main(int argc, char **argv)
 	*/
 	if(argc) argc = argc;
 
-	dogetenv("HOME", home);
+	strcpy(home, getenv("HOME"));
 	// prepare home to suit rsync.
 	if (home[strlen(home) -1 ] != '/') strcat(home, "/");
 
 	// setup my file paths
 	sprintf(wrkdir, "%s.config/backup/backup.cfg", home);
-	char *cfgfile = dostrdup(wrkdir);	// config file.
-	sprintf(wrkdir, "%slock/backup.lock", home);
-	char *lockfile = dostrdup(wrkdir);	// lock file
+	char *cfgfile = strdup(wrkdir);	// config file.
 	sprintf(wrkdir, "%slog/backup.log", home);
-	char *logfile = dostrdup(wrkdir);	// log file
+	char *logfile = strdup(wrkdir);	// log file
 	sprintf(wrkdir, "%slog/dryrun.log", home);
-	char *cruftfile = dostrdup(wrkdir);	// cruft
+	char *cruftfile = strdup(wrkdir);	// cruft
 	sprintf(wrkdir, "%slog", home);
-	char *logdir = dostrdup(wrkdir);	// log dir, to mkdir if needed.
-	sprintf(wrkdir, "%slock", home);
-	char *lockdir = dostrdup(wrkdir);	// lock dir, to mkdir if needed.
+	char *logdir = strdup(wrkdir);	// log dir, to mkdir if needed.
 	sprintf(wrkdir, "%s.config/backup/", home);
-	char *cfgdir = dostrdup(wrkdir);	// config dir.
+	char *cfgdir = strdup(wrkdir);	// config dir.
 	sprintf(wrkdir, "%sexcludes", cfgdir);
-	char *exclfile = dostrdup(wrkdir);	// excludes file
+	char *exclfile = strdup(wrkdir);	// excludes file
 	sprintf(wrkdir, "%slog/trace.txt", home);
-	char *tracefile = dostrdup(wrkdir);	// trace wtf
+	char *tracefile = strdup(wrkdir);	// trace wtf
 	sprintf(wrkdir, "%slog/bulog.bak", home);
-	char *bulog = dostrdup(wrkdir);	// safety copy of the log.
+	char *bulog = strdup(wrkdir);	// safety copy of the log.
 	sprintf(wrkdir, "%slog/errors.log", home);
-	char *errlog = dostrdup(wrkdir);	// log errors.
+	char *errlog = strdup(wrkdir);	// log errors.
 	sprintf(wrkdir, "%s.config/backup/cruft", home);
-	char *cruftregex = dostrdup(wrkdir);	// describe cruft by regex.
+	char *cruftregex = strdup(wrkdir);	// describe cruft by regex.
 
-	dogetenv("LOGNAME", user);
-
+	strcpy (user, getenv("LOGNAME"));
 
 	// Is this the first run of backup?
-	if (filexists(cfgfile, &fsize) == -1 ||
-		filexists(exclfile, &fsize) == -1 ||
-		filexists(cruftregex, &fsize) == -1 ) {
-		// the first run text
-		sprintf(wrkdir, frfmt, "excludes", "backup.cfg", "cruft",
-					cfgdir);
-		char *txt = dostrdup(wrkdir);
-		firstrun(txt, "/usr/local/share/backup/", cfgdir, "backup.cfg",
-					"excludes", "cruft", NULL);
-		free(txt);
-		fputs("\nPlease edit these files and run backup again.\n",
-				stdout);
-		// do the log and lock dirs exist in $HOME? If not make 'em.
-		if (direxists(logdir) == -1) {
-			// make it then.
-			sprintf(command, "mkdir %s", logdir);
-			dosystem(command);
-		}
-		if (direxists(lockdir) == -1) {
-			// make it then.
-			sprintf(command, "mkdir %s", lockdir);
-			dosystem(command);
-		}
+	if (fileexists(cfgfile) == -1 ||
+		fileexists(exclfile) == -1 ||
+		fileexists(cruftregex) == -1 )
+	{
+		firstrun("backup", "excludes", "backup.cfg", "cruft", NULL);
+		// the log dir most likely needs to be made
+		char cmdbuf[NAME_MAX];
+		sprintf(cmdbuf, "mkdir -p %s", logdir);
+		dosystem(cmdbuf);
+		fprintf(stderr,
+		"3 files, excludes, backup.cfg and cruft have been installed "
+		"at %s\n"
+		"You will need to edit these files to suit your system.\n"
+		"Next run of backup will do the backup.\n", logdir);
 		goto finis;
 	}
 
@@ -197,7 +166,7 @@ int main(int argc, char **argv)
 	fpo = dofreopen(logfile, "a", stdout);
 	fpe = dofreopen(errlog, "a", stderr);
 
-	// nice() this thing, I don't want the slightest delay from it.
+	// nice() this thing, I don't want it to delay anything else.
 	errno = 0;
 	if (nice(19) == -1) {
 		// -1 may be a legitimate return value.
@@ -232,33 +201,39 @@ int main(int argc, char **argv)
 		}
 	}
 
-	// Is an earlier instance of backup running?
-	if (filexists(lockfile, &fsize) == 0) {
-		// rsync may have crashed us out on an earlier run.
-		fclose(fpo);	// checkps needs stdout
-		if (checkps() == 0) {
-			// found something.
-			logthis(progname, "An earlier instance is running."
-					"Will quit.", stderr);
-			goto finis;
-		} else {
-			logthis(progname, "An earlier instance had crashed."
-					"Will continue.", stderr);
-		}
-		fpo = dofreopen(logfile, "a", stdout);
-	} else {
-		// Install the lock file
-		FILE *fpl = dofopen(lockfile, "w");
-		fclose(fpl);
+	// Where am I?
+	if (!getcwd(wrkdir, PATH_MAX)) {
+		perror("getcwd()");
+		exit(EXIT_FAILURE);
 	}
-	sync();
+	if (wrkdir[strlen(wrkdir) -1 ] != '/') strcat(wrkdir, "/");
+	if (strcmp(wrkdir, home) != 0) {
+		if (chdir(home) == -1) {
+			perror(home);
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	// Is an earlier instance of any backup program running?
+	/* I will avoid using lockfiles, just look for what is already
+	 * running.
+	*/
+	{
+		char *prlist[4] = {
+			"backup", "bulogrot", "cleanup", NULL
+		};
+		int res = isrunning(prlist);
+		if (res) {	// res will be 1 if any in the list are running.
+			logthis(progname, "An earlier instance is running."
+					" Will quit.", stderr);
+			goto finis;
+		}
+	}
 
 	// processes to run before the actual backup.
 	int i = 0;
 	while(runbefore[i]) {
-		char buf[PATH_MAX];
-		(void)realpath(runbefore[i], buf);
-		dosystem(buf);
+		dosystem(runbefore[i]);
 		i++;
 	}
 
@@ -334,16 +309,16 @@ int main(int argc, char **argv)
 			dorename(bulog, logfile);	// keep existing log
 			exit(EXIT_FAILURE);
 		}
-		writefile(logfile, lgfr, lgto);	// new copy of logfile.
+		writefile(logfile, lgfr, lgto, "w");	// new copy of logfile.
 		drfr = lgto + strlen("<dryrun>") + 1;
 		drto = memmem(drfr, logs.to - drfr, "</dryrun>",
 						strlen("</dryrun>"));
-		writefile(cruftfile, drfr, drto);	// new copy of cruftfile.
+		writefile(cruftfile, drfr, drto, "w"); // new copy of cruftfile.
 		/* Ok, we made two out of the one. Using the pointers as I have
 		 * means that there will be no xml tags in either file. They
-		 * are not needed. Apart from that the entire original log is
+		 * are not needed. Apart from the xml the entire original log is
 		 * a concatenation of the two subfiles. I can now safely rm the
-		 * original log. NB I write a new copy of the cruft file as all
+		 * original log. NB I write a new copy of the dryrun file as all
 		 * deleting notifications written to it will repeat until such
 		 * time as the cleanup program is run.
 		*/
@@ -359,8 +334,6 @@ int main(int argc, char **argv)
 		i++;
 	}
 
-	// clear the lock
-	dounlink(lockfile);
 	free(logs.from);
 	fclose(fpe);	// the error log.
 	free(bupath);
@@ -373,11 +346,9 @@ finis:
 	free(tracefile);
 	free(cfgdir);
 	free(exclfile);
-	free(lockdir);
 	free(logdir);
 	free(cruftfile);
 	free(logfile);
-	free(lockfile);
 	free(cfgfile);
 
 	return 0;

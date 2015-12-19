@@ -1,6 +1,6 @@
 /*      decruft.c
  *
- *	Copyright 2011 Bob Parker <rlp1938@gmail.com>
+ *	Copyright 2015 Bob Parker rlp1938@gmail.com
  *
  *	This program is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -31,12 +31,13 @@
 #include <libgen.h>
 #include <errno.h>
 
-#include "fileutil.h"
-#include "runutils.h"
-#include "backutils.h"
+#include "fileops.h"
 #include "greputils.h"
-
+char progname[NAME_MAX];
 static void usage(void);
+static void stripcomments(char *pathfrom, char *pathto);
+static void cpfile(const char *fr, const char *to);
+static void stripws(char *target);
 
 int main(int argc, char **argv)
 {
@@ -53,15 +54,14 @@ int main(int argc, char **argv)
 	strcpy(progname, basename(argv[0]));
 	if (argc != 2) usage();
 
-	off_t fsize;
-	if (filexists(argv[1], &fsize) == -1) usage();
+	if (fileexists(argv[1]) == -1) usage();
 
 	char *logfile = argv[1];
 
 	// find my configuration file.
-	dogetenv("HOME", home);
+	strcpy(home, getenv("HOME"));
 	sprintf(config, "%s/.config/backup/cruft", home);
-	if (filexists(config, &fsize) == -1) {
+	if (fileexists(config) == -1) {
 		fprintf(stderr, "No such file: %s\n", config);
 		exit(EXIT_FAILURE);
 	}
@@ -75,8 +75,7 @@ int main(int argc, char **argv)
 	// read my comment stripped regexes into memory
 	struct fdata rxdat = readfile(tmpcruft, 0, 1);
 	dounlink(tmpcruft);
-	int lc;
-	mem2str(rxdat.from, rxdat.to, &lc);
+	mem2str(rxdat.from, rxdat.to);
 
 	// I need 2 workfiles in /tmp
 	char tmpwork_fr[NAME_MAX], tmpwork_to[NAME_MAX];
@@ -109,3 +108,60 @@ void usage(void)
 
 } //usage()
 
+void stripcomments(char *pathfrom, char *pathto)
+{
+	FILE *fpo;
+	struct fdata fdat;
+	char line[NAME_MAX];
+
+	fdat = readfile(pathfrom, 0, 1);
+	mem2str(fdat.from, fdat.to);
+
+	fpo = dofopen(pathto, "w");
+	char *cp = fdat.from;
+	while (cp < fdat.to) {
+		if (cp[0] != '#') {
+			char *cmt;
+			strcpy(line, cp);
+			cmt = strchr(line, '#');
+			if (cmt) *cmt = '\0';
+			stripws(line);
+			fprintf(fpo, "%s\n", line);
+		}
+		cp += strlen(cp) + 1;
+	} // while()
+	free(fdat.from);
+	fclose(fpo);
+} // stripcomments()
+
+void cpfile(const char *fr, const char *to)
+{
+	struct fdata frdat = readfile(fr, 0, 1);
+	writefile(to, frdat.from, frdat.to, "w");
+	free(frdat.from);
+}
+
+void stripws(char *target)
+{	// strip white space if any from target
+	size_t len;
+	char *wrk, *cpf, *cpt;
+
+	len = strlen(target);
+	wrk = malloc(len + 1);
+	if (!wrk) {
+		perror("malloc()");
+		exit(EXIT_FAILURE);
+	}
+	cpf = target;
+	cpt = wrk;
+	while(*cpf) {
+		if (isspace(*cpf) == 0) {
+			*cpt = *cpf;
+			cpt++;
+		}
+		cpf++;
+	} // while()
+	*cpt = '\0';
+	strcpy(target, wrk);
+	free(wrk);
+} // stripws()

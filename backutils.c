@@ -19,7 +19,6 @@
 */
 
 #include "backutils.h"
-#include "fileutil.h"
 #include "greputils.h"
 
 
@@ -83,7 +82,7 @@ int getbupath(char *mtabfile, char *bregex, char *budir,
 	if (sb.st_size == 0) goto finis;	// grep came up empty
 	// The file will have 1 or more lines.
 	char *cp;
-	filedata fdat = readfile(outfil, 0, 1);
+	fdata fdat = readfile(outfil, 0, 1);
 	unlink(outfil);
 
 	// loop over the file data and extract dir search path

@@ -100,22 +100,19 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)" \
 	"$(DESTDIR)$(bacdir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_backup_OBJECTS = backup.$(OBJEXT) fileutil.$(OBJEXT) \
-	backutils.$(OBJEXT) runutils.$(OBJEXT) greputils.$(OBJEXT) \
-	checkps.$(OBJEXT)
+am_backup_OBJECTS = backup.$(OBJEXT) fileops.$(OBJEXT) \
+	backutils.$(OBJEXT) greputils.$(OBJEXT) firstrun.$(OBJEXT)
 backup_OBJECTS = $(am_backup_OBJECTS)
 backup_LDADD = $(LDADD)
-am_bulogrot_OBJECTS = bulogrot.$(OBJEXT) fileutil.$(OBJEXT) \
-	runutils.$(OBJEXT) checkps.$(OBJEXT)
+am_bulogrot_OBJECTS = bulogrot.$(OBJEXT) fileops.$(OBJEXT)
 bulogrot_OBJECTS = $(am_bulogrot_OBJECTS)
 bulogrot_LDADD = $(LDADD)
-am_cleanup_OBJECTS = cleanup.$(OBJEXT) fileutil.$(OBJEXT) \
-	backutils.$(OBJEXT) runutils.$(OBJEXT) greputils.$(OBJEXT) \
-	checkps.$(OBJEXT)
+am_cleanup_OBJECTS = cleanup.$(OBJEXT) fileops.$(OBJEXT) \
+	backutils.$(OBJEXT) firstrun.$(OBJEXT) greputils.$(OBJEXT)
 cleanup_OBJECTS = $(am_cleanup_OBJECTS)
 cleanup_LDADD = $(LDADD)
-am_decruft_OBJECTS = decruft.$(OBJEXT) fileutil.$(OBJEXT) \
-	backutils.$(OBJEXT) runutils.$(OBJEXT) greputils.$(OBJEXT)
+am_decruft_OBJECTS = decruft.$(OBJEXT) fileops.$(OBJEXT) \
+	greputils.$(OBJEXT)
 decruft_OBJECTS = $(am_decruft_OBJECTS)
 decruft_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -313,10 +310,10 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CFLAGS = -Wall -Wextra -D_GNU_SOURCE
-backup_SOURCES = backup.c fileutil.c fileutil.h backutils.c backutils.h runutils.c runutils.h greputils.c greputils.h checkps.h checkps.c
-cleanup_SOURCES = cleanup.c fileutil.c fileutil.h backutils.c backutils.h runutils.c runutils.h greputils.c greputils.h checkps.h checkps.c
-decruft_SOURCES = decruft.c fileutil.c fileutil.h backutils.c backutils.h runutils.c runutils.h greputils.c greputils.h
-bulogrot_SOURCES = bulogrot.c fileutil.c fileutil.h runutils.c runutils.h checkps.h checkps.c
+backup_SOURCES = backup.c fileops.c fileops.h backutils.c backutils.h greputils.c greputils.h firstrun.h firstrun.c
+cleanup_SOURCES = cleanup.c fileops.c fileops.h backutils.c backutils.h firstrun.c firstrun.h greputils.c greputils.h
+decruft_SOURCES = decruft.c fileops.c fileops.h greputils.c greputils.h
+bulogrot_SOURCES = bulogrot.c fileops.c fileops.h
 man_MANS = backup.1 cleanup.1 bulogrot.1 decruft.1
 bacdir = $(datadir)/backup
 bac_DATA = backup.cfg excludes cruft
@@ -443,12 +440,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/backup.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/backutils.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bulogrot.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/checkps.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cleanup.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/decruft.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fileutil.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fileops.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/firstrun.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/greputils.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/runutils.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

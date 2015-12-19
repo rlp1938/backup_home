@@ -13,8 +13,7 @@
 #include <limits.h>
 #include <libgen.h>
 #include <time.h>
-
-#include "runutils.h"
+#include "fileops.h"
 #include "greputils.h"
 
 void *memmem(const void *haystack, size_t haystacklen,
@@ -26,6 +25,5 @@ int getbupath(char *mtabfile, char *bregex, char *budir,
 						char *bupath);
 char *recursedir(char *topdir, char *searchfor);
 void logthis(const char *who, const char *msg, FILE *fplog);
-int checkps(void);
 
 #endif /* backutils.h */

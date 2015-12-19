@@ -1,6 +1,6 @@
 /*      cleanup.c
  *
- *	Copyright 2014/12/23 Bob Parker <rlp1938@gmail.com>
+ *	Copyright 2015 Bob Parker rlp1938@gmail.com
  *
  *	This program is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -30,13 +30,12 @@
 #include <libgen.h>
 #include <errno.h>
 
-#include "fileutil.h"
-#include "runutils.h"
 #include "backutils.h"
-#include "checkps.h"
+#include "fileops.h"
+#include "firstrun.h"	// for dosystem()
 
 // Globals
-
+char progname[NAME_MAX];
 
 int main(int argc, char **argv)
 {
@@ -44,7 +43,6 @@ int main(int argc, char **argv)
 	struct fdata conf, mtab;
 	char dirname[NAME_MAX], bdev[32], wrkdir[PATH_MAX],
 				command[NAME_MAX];
-	off_t fsize;
 	FILE *fpo, *fpe;
 
 	strcpy(progname, basename(argv[0]));
@@ -54,31 +52,31 @@ int main(int argc, char **argv)
 	*/
 	if(argc) argc = argc;
 
-	dogetenv("HOME", home);
+	strcpy(home, getenv("HOME"));
 	// prepare home to suit rsync.
 	if (home[strlen(home) -1 ] != '/') strcat(home, "/");
 
 	// setup my file paths
 	sprintf(wrkdir, "%s.config/backup/backup.cfg", home);
-	char *cfgfile = dostrdup(wrkdir);	// config file.
+	char *cfgfile = strdup(wrkdir);	// config file.
 	sprintf(wrkdir, "%slock/backup.lock", home);
-	char *lockfile = dostrdup(wrkdir);	// lock file
+	char *lockfile = strdup(wrkdir);	// lock file
 	sprintf(wrkdir, "%slog/backup.log", home);
-	char *logfile = dostrdup(wrkdir);	// log file
+	char *logfile = strdup(wrkdir);	// log file
 	sprintf(wrkdir, "%slog", home);
-	char *logdir = dostrdup(wrkdir);	// log dir, to mkdir if needed.
+	char *logdir = strdup(wrkdir);	// log dir, to mkdir if needed.
 	sprintf(wrkdir, "%slock", home);
-	char *lockdir = dostrdup(wrkdir);	// lock dir, to mkdir if needed.
+	char *lockdir = strdup(wrkdir);	// lock dir, to mkdir if needed.
 	sprintf(wrkdir, "%s.config/backup/", home);
-	char *cfgdir = dostrdup(wrkdir);	// config dir.
+	char *cfgdir = strdup(wrkdir);	// config dir.
 	sprintf(wrkdir, "%sexcludes", cfgdir);
-	char *exclfile = dostrdup(wrkdir);	// excludes file
+	char *exclfile = strdup(wrkdir);	// excludes file
 	sprintf(wrkdir, "%slog/trace.txt", home);
-	char *tracefile = dostrdup(wrkdir);	// trace wtf
+	char *tracefile = strdup(wrkdir);	// trace wtf
 	sprintf(wrkdir, "%slog/errors.log", home);
-	char *errlog = dostrdup(wrkdir);	// log errors.
+	char *errlog = strdup(wrkdir);	// log errors.
 
-	dogetenv("LOGNAME", user);
+	strcpy (user, getenv("LOGNAME"));
 
 	// redirect stdout, stderr
 	fpo = dofreopen(logfile, "a", stdout);
@@ -124,24 +122,18 @@ int main(int argc, char **argv)
 	}
 
 	// Is an earlier instance of backup running?
-	if (filexists(lockfile, &fsize) == 0) {
-		// rsync may have crashed us out on an earlier run.
-		fclose(fpo);	// checkps needs stdout
-		if (checkps() == 0) {
-			// found something.
+	{
+		char *prlist[4] = {
+			"backup", "bulogrot", "cleanup", NULL
+		};
+		int res = isrunning(prlist);
+		if (res) {	// res will be 1 if any in the list are running.
 			logthis(progname, "An earlier instance is running."
-					"Will quit.", stderr);
+					" Will quit.", stderr);
 			goto finis;
-		} else {
-			logthis(progname, "An earlier instance had crashed."
-					"Will continue.", stderr);
 		}
-		fpo = dofreopen(logfile, "a", stdout);
-	} else {
-		// Install the lock file
-		FILE *fpl = dofopen(lockfile, "w");
-		fclose(fpl);
 	}
+
 	sync();
 
 	// record beginning date

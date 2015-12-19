@@ -3,13 +3,13 @@
 AM_CFLAGS=-Wall -Wextra -D_GNU_SOURCE
 
 bin_PROGRAMS=backup cleanup decruft bulogrot
-backup_SOURCES=backup.c fileutil.c fileutil.h backutils.c backutils.h runutils.c runutils.h greputils.c greputils.h checkps.h checkps.c
+backup_SOURCES=backup.c fileops.c fileops.h backutils.c backutils.h greputils.c greputils.h firstrun.h firstrun.c
 
-cleanup_SOURCES=cleanup.c fileutil.c fileutil.h backutils.c backutils.h runutils.c runutils.h greputils.c greputils.h checkps.h checkps.c
+cleanup_SOURCES=cleanup.c fileops.c fileops.h backutils.c backutils.h firstrun.c firstrun.h greputils.c greputils.h
 
-decruft_SOURCES=decruft.c fileutil.c fileutil.h backutils.c backutils.h runutils.c runutils.h greputils.c greputils.h
+decruft_SOURCES=decruft.c fileops.c fileops.h greputils.c greputils.h
 
-bulogrot_SOURCES=bulogrot.c fileutil.c fileutil.h runutils.c runutils.h checkps.h checkps.c
+bulogrot_SOURCES=bulogrot.c fileops.c fileops.h
 
 
 man_MANS=backup.1 cleanup.1 bulogrot.1 decruft.1

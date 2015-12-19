@@ -1,6 +1,6 @@
 /*      bulogrot.c - rotate the backup log files.
  *
- *	Copyright 2011 Bob Parker <rlp1938@gmail.com>
+ *	Copyright 2015 Bob Parker rlp1938@gmail.com
  *
  *	This program is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -30,10 +30,8 @@
 #include <limits.h>
 #include <libgen.h>
 
-#include "fileutil.h"
-#include "runutils.h"
-#include "checkps.h"
-//#include "backutils.h"
+#include "fileops.h"
+
 
 static void rotate(const char *rootname);
 
@@ -44,41 +42,35 @@ int main()
 	*/
 
 	char pathname[PATH_MAX];
-	char *home, *user, *lockfile, *logfile, *errlog;
-	off_t dummy;
-	FILE *fpo;
+	char user[NAME_MAX], home[NAME_MAX];
+	char *logfile, *errlog;
 
 	// set up my file names
-	dogetenv("LOGNAME", pathname);
-	user = dostrdup(pathname);
-	dogetenv("HOME", pathname);
-	home = dostrdup(pathname);
-	sprintf(pathname, "%s/lock/backup.lock", home);
-	lockfile = dostrdup(pathname);
+	strcpy (user, getenv("LOGNAME"));
+	strcpy(home, getenv("HOME"));
 	sprintf(pathname, "%s/log/backup.log", home);
-	logfile = dostrdup(pathname);
+	logfile = strdup(pathname);
 	sprintf(pathname, "%s/log/errors.log", home);
-	errlog = dostrdup(pathname);
+	errlog = strdup(pathname);
 
-	while(filexists(lockfile, &dummy) == 0) {
-		if (checkps() == -1) break;
-		sleep(60);
+	// Is an earlier instance of any backup program running?
+	/* I will avoid using lockfiles, just look for what is already
+	 * running.
+	*/
+	{
+		char *prlist[3] = {
+			"backup", "cleanup", NULL
+		};
+		int res = isrunning(prlist);
+		while(res) {
+			sleep(60);
+			res = isrunning(prlist);
+		}
 	}
-
-	// Ok past the locked state so put my own lock on.
-	fpo = dofopen(lockfile, "w");
-	fclose(fpo);
-	sync();
-
 	rotate(logfile);
 	rotate(errlog);
-	dounlink(lockfile);
-
 	free(errlog);
 	free(logfile);
-	free(lockfile);
-	free(home);
-	free(user);
 	return 0;
 }
 
@@ -86,11 +78,7 @@ void rotate(const char *rootname)
 {
 	FILE *fpo;
 	char thenames[8][PATH_MAX];
-	off_t fsiz;
-
-	if (filexists(rootname, &fsiz )== 0) {
-		if (fsiz < PATH_MAX) return;	// don't rotate small files.
-	}
+	// dropped the procedure to avoid rotating small files.
 	// now the array of filenames for the rotation
 	strcpy(thenames[0], rootname);
 	int i;
@@ -98,9 +86,9 @@ void rotate(const char *rootname)
 		sprintf(thenames[i], "%s.%d", thenames[0], i);
 	}
 	// do the actual rotation
-	if (filexists(thenames[7], &fsiz) == 0) dounlink(thenames[7]);
+	if (fileexists(thenames[7]) == 0) dounlink(thenames[7]);
 	for (i=6; i>-1; i--) {
-		if (filexists(thenames[i], &fsiz) == 0)
+		if (fileexists(thenames[i]) == 0)
 			dorename(thenames[i], thenames[i+1]);
 	} // for()
 	fpo = dofopen(rootname, "w");	// touch the new logfile.
