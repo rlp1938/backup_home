@@ -121,20 +121,22 @@ int main(int argc, char **argv)
 		}
 	}
 
-	// Is an earlier instance of backup running?
+	// Is an earlier instance of any backup program running?
+	/* I will avoid using lockfiles, just look for what is already
+	 * running.
+	*/
 	{
 		char *prlist[4] = {
-			"backup", "bulogrot", "cleanup", NULL
+				"backup", "bulogrot", "cleanup", NULL
 		};
 		int res = isrunning(prlist);
-		if (res) {	// res will be 1 if any in the list are running.
-			logthis(progname, "An earlier instance is running."
+		// res will be > 1 if another program in the list is running.
+		if (res > 1) {
+			logthis(progname, "An earlier backup program is running."
 					" Will quit.", stderr);
 			goto finis;
 		}
 	}
-
-	sync();
 
 	// record beginning date
 	logthis(progname, "Begin backup.", stdout);

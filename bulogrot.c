@@ -58,11 +58,11 @@ int main()
 	 * running.
 	*/
 	{
-		char *prlist[3] = {
-			"backup", "cleanup", NULL
+		char *prlist[4] = {
+			"bulogrot", "backup", "cleanup", NULL
 		};
 		int res = isrunning(prlist);
-		while(res) {
+		while(res > 1) {
 			sleep(60);
 			res = isrunning(prlist);
 		}

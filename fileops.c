@@ -271,12 +271,11 @@ int isrunning(char **proglist){
 			fscanf(fpi, "%s", readbuf);
 			int i = 0;
 			while(proglist[i]) {
-				if (strcmp(proglist[i], readbuf) == 0) result = 1;
+				if (strcmp(proglist[i], readbuf) == 0) result++;
 				i++;
 			}
 			fclose(fpi);
 		} // while(proglist[i])
-		if (result) break;
 	} // while(readdir())
 	closedir(prdir);
 	return result;
